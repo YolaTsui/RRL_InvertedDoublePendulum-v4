@@ -10,18 +10,6 @@ The project compares **PPO** (on-policy) and **SAC** (off-policy) on the **Inver
 
 This project uses Python 3.10 and MuJoCo continuous-control environments.
 
-To install dependencies with `uv`:
-
-```bash
-uv sync
-```
-
-If MuJoCo extras are needed:
-
-```bash
-uv add "gymnasium[mujoco]"
-```
-
 ---
 
 ## Experimental Procedure
