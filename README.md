@@ -1,168 +1,112 @@
-# Coursework 2: On-Policy vs Off-Policy Reinforcement Learning for Continuous Control
+# RRL-InvertedDoublePendulum-v4
 
-This assignment asks you to compare **PPO** (Proximal Policy Optimization, on-policy) and **SAC** (Soft Actor-Critic, off-policy) on a MuJoCo continuous-control task. You will implement the core update steps in each algorithm, tune hyperparameters via a grid search, run multi-seed experiments, and write a report analysing the results.
+This repository contains my implementation and experimental results for Coursework 2 on reinforcement learning for continuous control.
+
+The project compares **PPO** (on-policy) and **SAC** (off-policy) on the **InvertedDoublePendulum-v4** MuJoCo environment.
+
+---
+
+## Environment
+
+This project uses Python 3.10 and MuJoCo continuous-control environments.
+
+To install dependencies with `uv`:
+
+```bash
+uv sync
+```
+
+If MuJoCo extras are needed:
+
+```bash
+uv add "gymnasium[mujoco]"
+```
+
+---
+
+## Experimental Procedure
+
+The experimental workflow is as follows:
+
+1. **Baseline Experiments**  
+   Both PPO and SAC were first trained using baseline hyperparameters on the `InvertedDoublePendulum-v4` environment.  
+   Learning curves were plotted to compare their initial performance.
+
+2. **Hyperparameter Tuning**  
+   Two key hyperparameters were selected for each algorithm.  
+   A `3 × 3` grid search was conducted for both PPO and SAC, resulting in 9 configurations for each method.  
+   The results were visualised using tuning plots.
+
+3. **Best Hyperparameter Selection**  
+   Based on the tuning results, the best-performing hyperparameter configuration was selected separately for PPO and SAC.
+
+4. **Multi-Seed Experiments**  
+   Using the selected best hyperparameters:
+   - PPO was run with 3 different random seeds.
+   - SAC was run with 3 different random seeds.
+
+   Learning curves were plotted to provide a more robust comparison between the two algorithms.
+
+5. **Policy Rendering**  
+   The trained models were used to render the learned policies.  
+   GIF animations were generated to visually demonstrate the behaviour of the agents.
 
 ---
 
 ## Repository Structure
 
+- `agents/`: implementations of PPO, SAC, and rendering scripts
+- `notebooks/`: notebooks for plotting results and rendering policies
+- `output/`: saved models and experiment results
+- `requirements/`: dependency files
+- `pyproject.toml`, `uv.lock`: environment configuration
+- `README.md`: project description
+
+---
+
+## Main Files
+
+- `agents/ppo.py`: PPO implementation
+- `agents/sac.py`: SAC implementation
+- `agents/render.py`: policy rendering script
+- `notebooks/plot_results.ipynb`: learning curve plotting
+- `notebooks/render_policy.ipynb`: policy visualisation
+
+---
+
+## Example Commands
+
+### Baseline Training
+
+```bash
+python agents/ppo.py --env-id InvertedDoublePendulum-v4 --seed 1 --total-timesteps 1000000
+python agents/sac.py --env-id InvertedDoublePendulum-v4 --seed 1 --total-timesteps 400000
 ```
-agents/
-  ppo.py                # PPO skeleton — implement 4 stub functions
-  sac.py                # SAC skeleton — implement 4 stub functions
-notebooks/
-  plot_results.ipynb    # plot learning curves from output/
-  render_policy.ipynb   # load a saved model.pt and render the policy
-output/                 # training artefacts written here automatically
+
+### Final Multi-Seed Runs
+
+```bash
+python agents/ppo.py --env-id InvertedDoublePendulum-v4 --seed 1 --final-run --learning-rate 3e-4 --clip-coef 0.1
+python agents/ppo.py --env-id InvertedDoublePendulum-v4 --seed 2 --final-run --learning-rate 3e-4 --clip-coef 0.1
+python agents/ppo.py --env-id InvertedDoublePendulum-v4 --seed 3 --final-run --learning-rate 3e-4 --clip-coef 0.1
+
+python agents/sac.py --env-id InvertedDoublePendulum-v4 --seed 1 --final-run --policy-lr 1e-3 --batch-size 512
+python agents/sac.py --env-id InvertedDoublePendulum-v4 --seed 2 --final-run --policy-lr 1e-3 --batch-size 512
+python agents/sac.py --env-id InvertedDoublePendulum-v4 --seed 3 --final-run --policy-lr 1e-3 --batch-size 512
+```
+
+Final runs are saved to:
+
+```text
+output/{env_id}/{algorithm}/final_run/seed{seed}/
 ```
 
 ---
 
-## Prerequisites & Installation
+## Notes
 
-**Python 3.10 is required** (`>=3.10,<3.11`).
-
-**We recommend you use UV for environment mangagement:** [See UV installatin guide](https://docs.astral.sh/uv/getting-started/installation/)
-
-```bash
-git clone git@github.com:LeoHink/rrl_mujoco_cw2.git
-```
-
-```bash
-cd rrl_mujoco_cw2
-uv sync 
-```
-or (either should work)
-
-```bash
-uv pip install .
-uv pip install ".[mujoco]"   # MuJoCo environments
-```
+This repository contains my own implementation and results for the coursework.
 
 ---
-
-## What Is Provided vs What You Must Implement
-
-### Provided (skeleton)
-
-- Environment wrappers, training loops, logging, and model saving
-- Actor-critic networks (PPO) and Actor + twin Q-networks (SAC)
-- Replay buffer and observation normalisation
-- Plotting and rendering notebooks
-
-### You Must Implement
-
-The functions below raise `NotImplementedError`. Fill them in.
-
-**`agents/ppo.py`**
-
-| Function | What it computes |
-|---|---|
-| `compute_gae` | GAE advantages and return targets (backward TD recursion) |
-| `compute_ratio` | log-ratio and ratio π_θ / π_old |
-| `compute_policy_loss` | PPO clipped surrogate objective |
-| `compute_value_loss` | MSE value-function loss |
-
-**`agents/sac.py`**
-
-| Function | What it computes |
-|---|---|
-| `compute_q_target` | Bellman TD target: r + γ(1−d) min Q_target |
-| `compute_actor_loss` | Policy loss: E[α log π − min Q] |
-| `compute_alpha_loss` | Entropy coefficient tuning loss |
-| `soft_update` | Polyak average θ_target ← τθ + (1−τ)θ_target |
-
----
-
-## Running the Agents
-
-```bash
-# PPO
-python agents/ppo.py --env-id HalfCheetah-v4 --seed 1 --total-timesteps 1000000
-
-# SAC
-python agents/sac.py --env-id Hopper-v4 --seed 1 --total-timesteps 1000000
-```
-
-All hyperparameters are CLI flags (via `tyro`). Use `--help` to see all options.
-
-Outputs are saved automatically to `output/{env_id}/{algorithm}/{timestamp}_seed{seed}/`:
-
-```
-output/{env_id}/{algorithm}/{timestamp}_seed{seed}/
-├── config.yaml     # all hyperparameters used
-├── returns.npy     # episode returns array
-└── model.pt        # network weights (+ obs_rms for PPO)
-```
-
-### Final run
-
-Once you have chosen your best hyperparameters, record the final multi-seed results in a
-stable, predictable directory by passing `--final-run`:
-
-```bash
-# PPO — repeat for each seed
-python agents/ppo.py --env-id HalfCheetah-v4 --seed 1 --final-run --clip-coef 0.2 --learning-rate 3e-4
-python agents/ppo.py --env-id HalfCheetah-v4 --seed 2 --final-run ...
-
-# SAC — repeat for each seed
-python agents/sac.py --env-id Hopper-v4 --seed 1 --final-run --tau 0.005 --q-lr 1e-3
-python agents/sac.py --env-id Hopper-v4 --seed 2 --final-run ...
-```
-
-Outputs land in `output/{env_id}/{algorithm}/final_run/seed{seed}/` — no timestamp, easy
-to find and load in `notebooks/plot_results.ipynb`.
-
-### Available MuJoCo Environments
-
-Pick one environment to focus on for your experiments.
-
-| `--env-id` | Description |
-|---|---|
-| `Ant-v4` | 8-DoF ant locomotion |
-| `HalfCheetah-v4` | Planar cheetah running |
-| `Hopper-v4` | One-legged hopping |
-| `Humanoid-v4` | 17-DoF humanoid locomotion |
-| `HumanoidStandup-v4` | Humanoid standing up |
-| `InvertedDoublePendulum-v4` | Balance double pendulum |
-| `Pusher-v4` | Arm pushing object to goal |
-| `Reacher-v4` | 2-DoF arm reaching |
-| `Swimmer-v4` | 3-link swimmer |
-| `Walker2d-v4` | Bipedal walker |
-
----
-
-## Notebooks
-
-You can run these directly through the standard Jupyter Notebook interface or you can run these in VS Code with extension. 
-
-### Running Notebooks in VS Code
-
-Open `notebooks/plot_results.ipynb` or `notebooks/render_policy.ipynb` directly in VS Code and select the `.venv` kernel from the kernel picker.
-
-#### Kernel not showing up in VS Code?
-
-If the `.venv` kernel does not appear in the kernel picker, start a Jupyter server manually:
-
-```bash
-uv run jupyter notebook --no-browser
-```
-
-The terminal will print a URL like:
-
-```
-http://localhost:8888/?token=<your-token>
-```
-
-In VS Code, you can connect your running jupyter server by selecting a Kernel and opting to **"Existing Jupyter server ..."**, and paste the URL. VS Code will connect to that server and the correct kernel will be available.:w
-
----
-
-## Hyperparameter Search & Multi-Seed Runs
-
-Run a **3×3 grid search** — 3 values for each of 2 hyperparameters of your choosing (e.g. learning rate and clipping coefficient for PPO; learning rate and `tau` for SAC). Note in the interest of time it is completely fine to run just a single seed for the sweeps. Results are saved automatically; use `notebooks/plot_results.ipynb` to generate learning-curve figures. Evaluate and find the best hyperparameter configuration.
-
----
-
 
 
