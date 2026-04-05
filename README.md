@@ -95,12 +95,6 @@ python agents/sac.py --env-id InvertedDoublePendulum-v4 --seed 2 --final-run --p
 python agents/sac.py --env-id InvertedDoublePendulum-v4 --seed 3 --final-run --policy-lr 1e-3 --batch-size 512
 ```
 
-Final runs are saved to:
-
-```text
-output/{env_id}/{algorithm}/final_run/seed{seed}/
-```
-
 ---
 
 ## Notes
