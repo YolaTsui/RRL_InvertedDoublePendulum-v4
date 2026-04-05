@@ -244,70 +244,6 @@ wheels = [
 ]
 
 [[package]]
-name = "cleanrl"
-version = "2.0.0b1"
-source = { editable = "." }
-dependencies = [
-    { name = "gym" },
-    { name = "gymnasium" },
-    { name = "huggingface-hub" },
-    { name = "imageio" },
-    { name = "matplotlib" },
-    { name = "moviepy" },
-    { name = "mujoco" },
-    { name = "notebook" },
-    { name = "pygame" },
-    { name = "pyyaml" },
-    { name = "rich" },
-    { name = "tenacity" },
-    { name = "tensorboard" },
-    { name = "torch" },
-    { name = "tyro" },
-    { name = "wandb" },
-]
-
-[package.optional-dependencies]
-mujoco = [
-    { name = "imageio" },
-    { name = "mujoco" },
-]
-pytest = [
-    { name = "pytest" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pre-commit" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "gym", specifier = "==0.23.1" },
-    { name = "gymnasium", specifier = "==0.29.1" },
-    { name = "huggingface-hub", specifier = ">=0.11.1" },
-    { name = "imageio", specifier = ">=2.14.1,<3" },
-    { name = "imageio", marker = "extra == 'mujoco'", specifier = ">=2.14.1,<3" },
-    { name = "matplotlib", specifier = ">=3.10.0" },
-    { name = "moviepy", specifier = ">=1.0.3" },
-    { name = "mujoco", specifier = "<=2.3.3" },
-    { name = "mujoco", marker = "extra == 'mujoco'", specifier = "<=2.3.3" },
-    { name = "notebook", specifier = ">=7.1.3" },
-    { name = "pygame", specifier = ">=2.1" },
-    { name = "pytest", marker = "extra == 'pytest'", specifier = ">=7.1.3,<8" },
-    { name = "pyyaml", specifier = ">=6.0" },
-    { name = "rich", specifier = "<12.0" },
-    { name = "tenacity", specifier = ">=8.2.2" },
-    { name = "tensorboard", specifier = ">=2.10.0" },
-    { name = "torch", specifier = "==2.4.1" },
-    { name = "tyro", specifier = ">=0.5.10" },
-    { name = "wandb", specifier = ">=0.13.11" },
-]
-provides-extras = ["mujoco", "plot", "pytest"]
-
-[package.metadata.requires-dev]
-dev = [{ name = "pre-commit", specifier = ">=2.20.0,<3" }]
-
-[[package]]
 name = "click"
 version = "8.1.3"
 source = { registry = "https://pypi.org/simple" }
@@ -638,6 +574,12 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/0d/f8/5699ddb3e1c4f6d97b8930e573074849b921da8374fccd141f0f3a9bd713/gymnasium-0.29.1.tar.gz", hash = "sha256:1a532752efcb7590478b1cc7aa04f608eb7a2fdad5570cd217b66b6a35274bb1", size = 820485, upload-time = "2023-08-21T13:07:32.024Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a8/4d/3cbfd81ed84db450dbe73a89afcd8bc405273918415649ac6683356afe92/gymnasium-0.29.1-py3-none-any.whl", hash = "sha256:61c3384b5575985bb7f85e43213bcb40f36fcdff388cae6bc229304c71f2843e", size = 953939, upload-time = "2023-08-21T13:07:29.934Z" },
+]
+
+[package.optional-dependencies]
+mujoco = [
+    { name = "imageio" },
+    { name = "mujoco" },
 ]
 
 [[package]]
@@ -1902,6 +1844,70 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/e2/da/4e2b19d0f131f35b6146425f846563d0ce036763e38913d917187307a671/rpds_py-0.30.0-cp310-cp310-win32.whl", hash = "sha256:6de2a32a1665b93233cde140ff8b3467bdb9e2af2b91079f0333a0974d12d464", size = 221901, upload-time = "2025-11-30T20:21:51.32Z" },
     { url = "https://files.pythonhosted.org/packages/96/cb/156d7a5cf4f78a7cc571465d8aec7a3c447c94f6749c5123f08438bcf7bc/rpds_py-0.30.0-cp310-cp310-win_amd64.whl", hash = "sha256:1726859cd0de969f88dc8673bdd954185b9104e05806be64bcd87badbe313169", size = 235823, upload-time = "2025-11-30T20:21:52.505Z" },
 ]
+
+[[package]]
+name = "rrl-mujococ-cw2"
+version = "1.0.0"
+source = { editable = "." }
+dependencies = [
+    { name = "gym" },
+    { name = "gymnasium", extra = ["mujoco"] },
+    { name = "huggingface-hub" },
+    { name = "imageio" },
+    { name = "matplotlib" },
+    { name = "moviepy" },
+    { name = "mujoco" },
+    { name = "notebook" },
+    { name = "pygame" },
+    { name = "pyyaml" },
+    { name = "rich" },
+    { name = "tenacity" },
+    { name = "tensorboard" },
+    { name = "torch" },
+    { name = "tyro" },
+    { name = "wandb" },
+]
+
+[package.optional-dependencies]
+mujoco = [
+    { name = "imageio" },
+    { name = "mujoco" },
+]
+pytest = [
+    { name = "pytest" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pre-commit" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "gym", specifier = "==0.23.1" },
+    { name = "gymnasium", extras = ["mujoco"], specifier = "==0.29.1" },
+    { name = "huggingface-hub", specifier = ">=0.11.1" },
+    { name = "imageio", specifier = ">=2.14.1,<3" },
+    { name = "imageio", marker = "extra == 'mujoco'", specifier = ">=2.14.1,<3" },
+    { name = "matplotlib", specifier = ">=3.10.0" },
+    { name = "moviepy", specifier = ">=1.0.3" },
+    { name = "mujoco", specifier = "<=2.3.3" },
+    { name = "mujoco", marker = "extra == 'mujoco'", specifier = "<=2.3.3" },
+    { name = "notebook", specifier = ">=7.1.3" },
+    { name = "pygame", specifier = ">=2.1" },
+    { name = "pytest", marker = "extra == 'pytest'", specifier = ">=7.1.3,<8" },
+    { name = "pyyaml", specifier = ">=6.0" },
+    { name = "rich", specifier = "<12.0" },
+    { name = "tenacity", specifier = ">=8.2.2" },
+    { name = "tensorboard", specifier = ">=2.10.0" },
+    { name = "torch", specifier = "==2.4.1" },
+    { name = "tyro", specifier = ">=0.5.10" },
+    { name = "wandb", specifier = ">=0.13.11" },
+]
+provides-extras = ["mujoco", "plot", "pytest"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pre-commit", specifier = ">=2.20.0,<3" }]
 
 [[package]]
 name = "rsa"

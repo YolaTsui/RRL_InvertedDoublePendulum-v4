@@ -206,6 +206,20 @@ class Agent(nn.Module):
 
 # ── You Must implement these loss functions ───────────────────────────────────────
 
+# def compute_ratio(new_logprob: torch.Tensor, old_logprob: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+#     """Compute the importance-sampling log-ratio and ratio.
+
+#     Args:
+#         new_logprob : log π_θ(a|s)    under the current policy,  shape (minibatch,)
+#         old_logprob : log π_old(a|s)  under the behaviour policy, shape (minibatch,)
+
+#     Returns:
+#         logratio : log π_θ − log π_old,  shape (minibatch,)
+#         ratio    : exp(logratio),         shape (minibatch,)
+#     """
+    
+#     raise NotImplementedError
+#     return logratio, ratio
 def compute_ratio(new_logprob: torch.Tensor, old_logprob: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
     """Compute the importance-sampling log-ratio and ratio.
 
@@ -217,8 +231,8 @@ def compute_ratio(new_logprob: torch.Tensor, old_logprob: torch.Tensor) -> tuple
         logratio : log π_θ − log π_old,  shape (minibatch,)
         ratio    : exp(logratio),         shape (minibatch,)
     """
-    
-    raise NotImplementedError
+    logratio = new_logprob - old_logprob
+    ratio = torch.exp(logratio)
     return logratio, ratio
 
 
@@ -237,10 +251,44 @@ def compute_policy_loss(ratio: torch.Tensor, advantages: torch.Tensor, clip_coef
     Tip:
         You can use torch.clamp to performing the PPO clipping
     """
-    
-    raise NotImplementedError
-    return policy_loss 
+    pg_loss1 = ratio * advantages
+    pg_loss2 = torch.clamp(ratio, 1.0 - clip_coef, 1.0 + clip_coef) * advantages
+    policy_loss = -torch.min(pg_loss1, pg_loss2).mean()
+    return policy_loss
 
+
+# def compute_policy_loss(ratio: torch.Tensor, advantages: torch.Tensor, clip_coef: float) -> torch.Tensor:
+#     """Compute the clipped PPO policy loss (to be minimised).
+
+#     Args:
+#         ratio      : importance-sampling ratio π_θ(a|s)/π_old(a|s), shape (minibatch,)
+#         advantages : GAE advantage estimates A_t,                    shape (minibatch,)
+#         clip_coef  : PPO clipping epsilon ε
+
+#     Returns:
+#         Scalar loss tensor.
+
+#     Tip:
+#         You can use torch.clamp to performing the PPO clipping
+#     """
+    
+#     raise NotImplementedError
+#     return policy_loss 
+
+
+# def compute_value_loss(new_values: torch.Tensor, returns: torch.Tensor) -> torch.Tensor:
+#     """Compute the value-function MSE loss (to be minimised).
+
+#     Args:
+#         new_values : critic predictions V_θ(s_t), shape (minibatch,)
+#         returns    : GAE return targets G_t,       shape (minibatch,)
+
+#     Returns:
+#         Scalar loss tensor.
+#     """
+   
+#     raise NotImplementedError
+#     return v_loss
 
 def compute_value_loss(new_values: torch.Tensor, returns: torch.Tensor) -> torch.Tensor:
     """Compute the value-function MSE loss (to be minimised).
@@ -252,8 +300,7 @@ def compute_value_loss(new_values: torch.Tensor, returns: torch.Tensor) -> torch
     Returns:
         Scalar loss tensor.
     """
-   
-    raise NotImplementedError
+    v_loss = 0.5 * ((new_values - returns) ** 2).mean()
     return v_loss
 
 
@@ -267,49 +314,79 @@ def compute_gae(
     gae_lambda: float,
     num_steps: int,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Compute Generalised Advantage Estimation (GAE) for a completed rollout.
-
-    GAE (Schulman et al. 2015) blends 1-step TD errors into a lower-variance
-    advantage estimate by iterating *backward* through the rollout:
-
-        δ_t = r_t + γ V(s_{t+1})(1 − done_t) − V(s_t)
-        A_t = δ_t + (γλ)(1 − done_t) A_{t+1}
-
-    λ interpolates between pure TD (λ=0, high bias) and Monte-Carlo (λ=1, high variance).
-
-    Args:
-        rewards    : r_t,                shape (num_steps,)
-        values     : V(s_t),             shape (num_steps,)
-        dones      : terminal flags,     shape (num_steps,)
-        next_value : V(s_{T+1}) bootstrapped from the critic at rollout end
-        next_done  : whether the last rollout step ended the episode
-        gamma      : discount factor γ
-        gae_lambda : GAE λ
-        num_steps  : rollout length T
-
-    Returns:
-        advantages : A_t,        shape (num_steps,)
-        returns    : A_t + V_t,  shape (num_steps,)  (value-function regression targets)
-    """
+    """Compute Generalised Advantage Estimation (GAE) for a completed rollout."""
     advantages = torch.zeros_like(rewards)
-    lastgaelam = 0.0  # running accumulator A_{t+1}, initialised to 0 at rollout end
+    lastgaelam = 0.0
 
     for t in reversed(range(num_steps)):
         if t == num_steps - 1:
-            # Rollout boundary: bootstrap off next_value; mask out if episode ended.
             nextnonterminal = 1.0 - float(next_done)
-            nextvalues :while= next_value
+            nextvalues = next_value
         else:
-            # Mid-rollout: use the stored done flag and value from the buffer.
             nextnonterminal = 1.0 - dones[t + 1].item()
             nextvalues = values[t + 1]
 
-        # TODO: compute the 1-step TD error δ_t and the GAE advantage A_t.
-        
-        raise NotImplementedError # comment or delete this out once implemented
+        delta = rewards[t] + gamma * nextvalues * nextnonterminal - values[t]
+        lastgaelam = delta + gamma * gae_lambda * nextnonterminal * lastgaelam
+        advantages[t] = lastgaelam
 
     returns = advantages + values
     return advantages, returns
+
+
+# def compute_gae(
+#     rewards: torch.Tensor,
+#     values: torch.Tensor,
+#     dones: torch.Tensor,
+#     next_value: torch.Tensor,
+#     next_done: bool,
+#     gamma: float,
+#     gae_lambda: float,
+#     num_steps: int,
+# ) -> tuple[torch.Tensor, torch.Tensor]:
+#     """Compute Generalised Advantage Estimation (GAE) for a completed rollout.
+
+#     GAE (Schulman et al. 2015) blends 1-step TD errors into a lower-variance
+#     advantage estimate by iterating *backward* through the rollout:
+
+#         δ_t = r_t + γ V(s_{t+1})(1 − done_t) − V(s_t)
+#         A_t = δ_t + (γλ)(1 − done_t) A_{t+1}
+
+#     λ interpolates between pure TD (λ=0, high bias) and Monte-Carlo (λ=1, high variance).
+
+#     Args:
+#         rewards    : r_t,                shape (num_steps,)
+#         values     : V(s_t),             shape (num_steps,)
+#         dones      : terminal flags,     shape (num_steps,)
+#         next_value : V(s_{T+1}) bootstrapped from the critic at rollout end
+#         next_done  : whether the last rollout step ended the episode
+#         gamma      : discount factor γ
+#         gae_lambda : GAE λ
+#         num_steps  : rollout length T
+
+#     Returns:
+#         advantages : A_t,        shape (num_steps,)
+#         returns    : A_t + V_t,  shape (num_steps,)  (value-function regression targets)
+#     """
+#     advantages = torch.zeros_like(rewards)
+#     lastgaelam = 0.0  # running accumulator A_{t+1}, initialised to 0 at rollout end
+
+#     for t in reversed(range(num_steps)):
+#         if t == num_steps - 1:
+#             # Rollout boundary: bootstrap off next_value; mask out if episode ended.
+#             nextnonterminal = 1.0 - float(next_done)
+#             nextvalues :while= next_value
+#         else:
+#             # Mid-rollout: use the stored done flag and value from the buffer.
+#             nextnonterminal = 1.0 - dones[t + 1].item()
+#             nextvalues = values[t + 1]
+
+#         # TODO: compute the 1-step TD error δ_t and the GAE advantage A_t.
+        
+#         raise NotImplementedError # comment or delete this out once implemented
+
+#     returns = advantages + values
+#     return advantages, returns
 
 
 # ── Main training script ──────────────────────────────────────────────────────

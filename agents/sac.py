@@ -384,46 +384,24 @@ class Actor(nn.Module):
 
 # ── You Must implement these functions ────────────────────────────────────────
 
-
 def compute_q_target(
     rewards: torch.Tensor,
     dones: torch.Tensor,
     min_qf_next_target: torch.Tensor,
     gamma: float,
 ) -> torch.Tensor:
-    """Compute the Bellman backup (TD target) for the Q-networks.
-
-    Args:
-        rewards           : r_t,                      shape (batch,)
-        dones             : terminal flags (0 or 1),   shape (batch,)
-        min_qf_next_target: min Q_target(s', a') − α log π(a'|s'),  shape (batch,)
-        gamma             : discount factor
-
-    Returns:
-        Scalar-equivalent 1-D target tensor, shape (batch,).
-    """
-    raise NotImplementedError
+    """Compute the Bellman backup (TD target) for the Q-networks."""
+    q_target = rewards + gamma * (1.0 - dones) * min_qf_next_target
     return q_target
+
 
 def compute_actor_loss(
     log_pi: torch.Tensor,
     min_qf_pi: torch.Tensor,
     alpha: float,
 ) -> torch.Tensor:
-    """Compute the SAC actor (policy) loss.
-
-    The actor maximises  E[Q(s,a) − α log π(a|s)],
-    so the loss to *minimise* is the negation of that expectation.
-
-    Args:
-        log_pi    : log π_θ(a|s), shape (batch, 1)
-        min_qf_pi : min(Q1(s,a), Q2(s,a)), shape (batch, 1)
-        alpha     : current entropy coefficient (scalar float)
-
-    Returns:
-        Scalar loss tensor.
-    """
-    raise NotImplementedError
+    """Compute the SAC actor (policy) loss."""
+    actor_loss = (alpha * log_pi - min_qf_pi).mean()
     return actor_loss
 
 
@@ -432,36 +410,93 @@ def compute_alpha_loss(
     log_pi: torch.Tensor,
     target_entropy: float,
 ) -> torch.Tensor:
-    """Compute the loss for automatic entropy-coefficient tuning.
-
-    Args:
-        log_alpha      : log α (learnable scalar tensor)
-        log_pi         : log π_θ(a|s) detached from the policy graph, shape (batch, 1)
-        target_entropy : desired minimum entropy H_target
-
-    Returns:
-        Scalar loss tensor.
-    """
-    raise NotImplementedError
+    """Compute the loss for automatic entropy-coefficient tuning."""
+    alpha_loss = -(log_alpha * (log_pi + target_entropy).detach()).mean()
     return alpha_loss
 
 
 def soft_update(net: nn.Module, target_net: nn.Module, tau: float) -> None:
-    """Polyak-average the parameters of `net` into `target_net`.
+    """Polyak-average the parameters of `net` into `target_net`."""
+    for param, target_param in zip(net.parameters(), target_net.parameters()):
+        target_param.data.copy_(tau * param.data + (1.0 - tau) * target_param.data)
 
-    For each pair of parameters θ, θ_target:
-        θ_target ← τ θ + (1 − τ) θ_target
+# def compute_q_target(
+#     rewards: torch.Tensor,
+#     dones: torch.Tensor,
+#     min_qf_next_target: torch.Tensor,
+#     gamma: float,
+# ) -> torch.Tensor:
+#     """Compute the Bellman backup (TD target) for the Q-networks.
 
-    Args:
-        net        : source network (updated by gradient descent)
-        target_net : exponential-moving-average copy
-        tau        : interpolation coefficient (small, e.g. 0.005)
-    Hint:
-        This function doesn't return anything but performs the update directly
-    Tip:
-        You can use use params.data.copy_ to do this see for example: https://docs.pytorch.org/docs/stable/generated/torch.Tensor.copy_.html
-    """
-    raise NotImplementedError # Remove once implemented
+#     Args:
+#         rewards           : r_t,                      shape (batch,)
+#         dones             : terminal flags (0 or 1),   shape (batch,)
+#         min_qf_next_target: min Q_target(s', a') − α log π(a'|s'),  shape (batch,)
+#         gamma             : discount factor
+
+#     Returns:
+#         Scalar-equivalent 1-D target tensor, shape (batch,).
+#     """
+#     raise NotImplementedError
+#     return q_target
+
+# def compute_actor_loss(
+#     log_pi: torch.Tensor,
+#     min_qf_pi: torch.Tensor,
+#     alpha: float,
+# ) -> torch.Tensor:
+#     """Compute the SAC actor (policy) loss.
+
+#     The actor maximises  E[Q(s,a) − α log π(a|s)],
+#     so the loss to *minimise* is the negation of that expectation.
+
+#     Args:
+#         log_pi    : log π_θ(a|s), shape (batch, 1)
+#         min_qf_pi : min(Q1(s,a), Q2(s,a)), shape (batch, 1)
+#         alpha     : current entropy coefficient (scalar float)
+
+#     Returns:
+#         Scalar loss tensor.
+#     """
+#     raise NotImplementedError
+#     return actor_loss
+
+
+# def compute_alpha_loss(
+#     log_alpha: torch.Tensor,
+#     log_pi: torch.Tensor,
+#     target_entropy: float,
+# ) -> torch.Tensor:
+#     """Compute the loss for automatic entropy-coefficient tuning.
+
+#     Args:
+#         log_alpha      : log α (learnable scalar tensor)
+#         log_pi         : log π_θ(a|s) detached from the policy graph, shape (batch, 1)
+#         target_entropy : desired minimum entropy H_target
+
+#     Returns:
+#         Scalar loss tensor.
+#     """
+#     raise NotImplementedError
+#     return alpha_loss
+
+
+# def soft_update(net: nn.Module, target_net: nn.Module, tau: float) -> None:
+#     """Polyak-average the parameters of `net` into `target_net`.
+
+#     For each pair of parameters θ, θ_target:
+#         θ_target ← τ θ + (1 − τ) θ_target
+
+#     Args:
+#         net        : source network (updated by gradient descent)
+#         target_net : exponential-moving-average copy
+#         tau        : interpolation coefficient (small, e.g. 0.005)
+#     Hint:
+#         This function doesn't return anything but performs the update directly
+#     Tip:
+#         You can use use params.data.copy_ to do this see for example: https://docs.pytorch.org/docs/stable/generated/torch.Tensor.copy_.html
+#     """
+#     raise NotImplementedError # Remove once implemented
 
 
 # ──────────────────────────────────────────────────────────────────────────────
