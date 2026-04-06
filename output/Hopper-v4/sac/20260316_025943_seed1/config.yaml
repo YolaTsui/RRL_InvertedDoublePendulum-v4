@@ -1,0 +1,17 @@
+alpha: 0.2
+autotune: true
+batch_size: 256
+buffer_size: 1000000
+cuda: true
+env_id: Hopper-v4
+final_run: false
+gamma: 0.99
+learning_starts: 5000.0
+num_envs: 1
+output_dir: output
+policy_lr: 0.0003
+q_lr: 0.0003
+seed: 1
+tau: 0.005
+torch_deterministic: true
+total_timesteps: 1000000
